@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %} Top N {% endblock %}
+
+{% macro render_infos_score(news, width, height) %}
+  <span><img src="{{ url_for('static', filename=news['img_src']) }}" class="card-img-left" alt="{{ news['site'] }}" style="width:{{ width }}; height:{{ height }};"></span>
+  <span><b> ~ {{ news["title_news"] }}</b></span> 
+  <span>
+    <small><small>
+      <span>
+        <b>Nível negativo/positivo:</b>
+        <span class="text-info">{{ news['score_tb'] }} ({{ news['sentiment_tb'] }})</span>
+        </br>
+        <b>Nível subjetivo/objetivo</b>
+        <span class="text-info">{{ news['score_subjectivity'] }} ({{ news['subjectivity_tb'] }})</span>
+      </small></small>
+    </span>
+  </span>
+{% endmacro %}
+
+{% macro render_url(news) %}
+  {% if news['espectro']=='right' %}
+    <span><small><small><a href="{{ news['url_news']}}" class="card-link">{{ news['url_news'] }}</a></small></small></span>
+  {% else %}
+    <span><small><small><a href="{{ news['url_news']}}" class="card-link" style="margin-right:10%;">{{ news['url_news'] }}</a></small></small></span>
+  {% endif %}
+{% endmacro %}
+
+{% block news_left %} 
+  {% for news in list_news %}  
+    {% if (news['espectro']=='left') and (news['tag']=='Tecnologia') %}
+      <div class="row text-md-left">                          
+        {% if (news['site'] == 'ICL Notícias') %}
+          {{ render_infos_score(news, width='4.7em', height='1.5em') }}
+        {% elif news['site'] == 'Carta Capital' %}
+          {{ render_infos_score(news, width='3.8em', height='1.2em') }}
+        {% endif %}
+        <br>
+        <div>
+          {{ render_url(news) }}
+        </div>
+      </div>
+    <hr>
+    {% endif %}
+  {% endfor %}
+{% endblock %}
+
+{% block news_center %} 
+  {% for news in list_news %}
+    {% if (news['espectro']=='center') and (news['tag']=='Tecnologia') %}
+      <div class="row text-left">      
+      {% if news['site'] == 'Olhar Digital' %}
+        {{ render_infos_score(news, width='1.7em', height='1.6em') }}
+      {% elif news['site'] == 'Poder 360' %}
+        {{ render_infos_score(news, width='2.9em', height='1.3em') }}
+      {% endif %}
+      <br>
+      <div>
+        {{ render_url(news) }}
+      </div>
+      </div>
+    <hr>
+    {% endif %}
+  {% endfor %}
+{% endblock %}
+
+{% block news_right %} 
+  {% for news in list_news %}  
+    {% if (news['espectro']=='right') and (news['tag']=='Tecnologia') %} 
+      <div class="row text-left">
+        {% if news['site'] == 'UOL' %}
+          {{ render_infos_score(news, width='2.5em', height='1.0em') }}
+        {% elif news['site'] == 'G1-Mundo' %}
+          {{ render_infos_score(news, width='1.2em', height='0.9em') }}
+        {% elif news['site'] == 'Canaltech' %}
+          {{ render_infos_score(news, width='1.2em', height='1.2em') }}        
+        {% endif %}
+        <div>
+          {{ render_url(news) }}
+        </div>
+      </div>
+    <hr>  
+    {% endif %}         
+  {% endfor %}
+{% endblock %}

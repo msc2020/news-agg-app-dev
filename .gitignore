@@ -1,0 +1,6 @@
+.env
+.space
+.venv
+__pycache__
+notebooks
+backups

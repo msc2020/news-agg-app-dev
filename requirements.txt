@@ -1,0 +1,9 @@
+beautifulsoup4
+environs
+Flask
+pytz
+requests
+waitress
+Werkzeug
+textblob
+deep-translator
