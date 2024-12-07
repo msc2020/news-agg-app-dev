@@ -7,6 +7,6 @@
 
 - Scrape some sites of news.
 
-- Apply a machine learning sentiment analysis over each collected news.
+- Apply a [machine learning sentiment analysis](https://en.wikipedia.org/wiki/Sentiment_analysis) over each collected news.
 
 - Show the title with url to the original source.
