@@ -19,7 +19,6 @@
   </span>
 {% endmacro %}
 
-<<<<<<< HEAD
 {% macro render_url(news) %}
   {% if news['espectro']!='right' %}
     <span><small><small><a href="{{ news['url_news']}}" class="card-link">{{ news['url_news'] }}</a></small></small></span>
@@ -32,11 +31,6 @@
 {% block news_left %} 
   {% for news in list_news %}  
     {% if news['espectro']=='left' %}
-=======
-{% block news_left %}
-  {% for news in list_news %}  
-    {% if (news['espectro']=='left') and (news['tag']=='Gerais') %}
->>>>>>> 23b867d (-)
       <div class="row text-md-left">
         {% if news['site'] == 'Brasil de Fato' %}
           {{ render_infos_score(news, width='3.0em', height='1.3em') }}
@@ -44,14 +38,10 @@
           {{ render_infos_score(news, width='3.8em', height='1.2em') }}
         {% elif (news['site'] == 'ICL Notícias') %}          
           {{ render_infos_score(news, width='4.7em', height='1.5em') }}                
-<<<<<<< HEAD
         {% endif %}
         <div>
           {{ render_url(news) }}
         </div>
-=======
-        {% endif %}        
->>>>>>> 23b867d (-)
       </div>
       <hr>
     {% endif %}    
@@ -73,27 +63,6 @@
   {% endfor %}
 {% endblock %}
 
-<<<<<<< HEAD
-{% block news_center %}
-  {% for news in list_news %}
-    {% if news['espectro']=='center' %}
-      <div class="row text-left">      
-        {% if news['site'] == 'Agência Brasil' %}
-          {{ render_infos_score(news, width='3.7em', height='1.6em') }}
-        {% elif news['site'] == 'Poder 360' %}
-          {{ render_infos_score(news, width='2.9em', height='1.3em') }}
-        {% endif %}
-        <div>
-          {{ render_url(news) }}
-        </div>
-      </div>
-      <hr>
-    {% endif %}
-  {% endfor %}
-{% endblock %}
-
-=======
->>>>>>> 23b867d (-)
 {% block news_right %}
   {% for news in list_news %}  
     {% if (news['espectro']=='right') and (news['tag']=='Gerais') %}
