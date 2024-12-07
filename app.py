@@ -43,7 +43,11 @@ if TESTS_DEBUG == False:
 
     # top N news
     def top_news(verbose=False):
+<<<<<<< HEAD
         all_news = [news_bdf, news_carta_capital, news_g1, news_icl, \
+=======
+        all_news = [news_bdf, news_carta_capital, news_g1, news_icl,\
+>>>>>>> 23b867d (-)
             news_agencia_brasil, news_poder360,\
             news_uol, news_canaltech, news_olhar_digital]
         
