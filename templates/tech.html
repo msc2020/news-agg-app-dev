@@ -4,7 +4,7 @@
 
 {% macro render_infos_score(news, width, height) %}
   <span><img src="{{ url_for('static', filename=news['img_src']) }}" class="card-img-left" alt="{{ news['site'] }}" style="width:{{ width }}; height:{{ height }};"></span>
-  <span><b> ~ {{ news["title_news"] }}</b></span> 
+  <span><b> ~ <a href="{{ news['url_news'] }}" title="{{ news['url_news'] }}" style="color: black;">{{ news["title_news"] }}</a></b></span>
   <span>
     <small><small>
       <span>
@@ -14,16 +14,8 @@
         <b>Nível subjetivo/objetivo</b>
         <span class="text-info">{{ news['score_subjectivity'] }} ({{ news['subjectivity_tb'] }})</span>
       </small></small>
-    </span>
+    </span>    
   </span>
-{% endmacro %}
-
-{% macro render_url(news) %}
-  {% if news['espectro']=='right' %}
-    <span><small><small><a href="{{ news['url_news']}}" class="card-link">{{ news['url_news'] }}</a></small></small></span>
-  {% else %}
-    <span><small><small><a href="{{ news['url_news']}}" class="card-link" style="margin-right:10%;">{{ news['url_news'] }}</a></small></small></span>
-  {% endif %}
 {% endmacro %}
 
 {% block news_left %} 
@@ -35,10 +27,6 @@
         {% elif news['site'] == 'Carta Capital' %}
           {{ render_infos_score(news, width='3.8em', height='1.2em') }}
         {% endif %}
-        <br>
-        <div>
-          {{ render_url(news) }}
-        </div>
       </div>
     <hr>
     {% endif %}
@@ -54,10 +42,6 @@
       {% elif news['site'] == 'Poder 360' %}
         {{ render_infos_score(news, width='2.9em', height='1.3em') }}
       {% endif %}
-      <br>
-      <div>
-        {{ render_url(news) }}
-      </div>
       </div>
     <hr>
     {% endif %}
@@ -75,9 +59,6 @@
         {% elif news['site'] == 'Canaltech' %}
           {{ render_infos_score(news, width='1.2em', height='1.2em') }}        
         {% endif %}
-        <div>
-          {{ render_url(news) }}
-        </div>
       </div>
     <hr>  
     {% endif %}         
