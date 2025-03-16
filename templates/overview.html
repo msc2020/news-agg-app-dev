@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %} Overview {% endblock %}
+
+{% block content %}
+<div class="row justify-content-center row-cols-2" title=". Nível de Subjetividade: objetivo ~ 0%; neutro ~ 50%; subjetivo ~ 100%
+. Nível de Positividade: neutro ~ 0%; positivo ~ 50%; negativo ~ 100%">
+    <div class="col">
+        {% for table in tables_week %}
+            <div class="card-body">
+                <h5 class="card-title" style="color:black;">{{titles_tables_week[loop.index]}}</h5>
+                <div>            
+                    {{ table|safe }}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <div class="col">
+        {% for table in tables_count %}
+            <div class="card-body">
+                <h5 class="card-title" style="color:black;">{{titles_tables_count[loop.index]}}</h5>
+                <div>            
+                    {{ table|safe }}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <div class="col">
+        {% for table in tables_value_counts %}
+            <div class="card-body">
+                <h5 class="card-title" style="color:black;">{{titles_tables_value_counts[loop.index]}}</h5>
+                <div>            
+                    {{ table|safe }}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <div class="col-8">
+        {% for table in tables_tail %}
+            <div class="card-body">                
+                <p>
+                    <h4 class="card-title" style="color:black;">{{titles_tables_tail[loop.index]}}</h4>
+                    <a href="#" onclick="download_table_as_csv('last_news');">Download como CSV</a>
+                <div>                                
+                    {{ table|safe }}
+                </div>
+                <small>Exibindo {{ n_samples_df }} de {{ total_db }}.</small>               
+            </div>
+        {% endfor %}
+    </div>
+    
+</div>
+{% endblock %}

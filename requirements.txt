@@ -1,9 +1,20 @@
+flask_sqlalchemy
+pymysql
+# mysqlclient== # or mysqlclient==2.2.0, descomentar para deploy local
 beautifulsoup4
 environs
-Flask
+# Flask
+bokeh==3.4.3
+flask[async]
 pytz
 requests
 waitress
 Werkzeug
 textblob
 deep-translator
+SQLAlchemy
+cryptography
+pandas
+
+# sphinx # documentação
+numpydoc # add in conf.py: >>> extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'numpydoc']

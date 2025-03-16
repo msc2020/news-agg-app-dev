@@ -1,512 +1,543 @@
 import time
 import requests
 from bs4 import BeautifulSoup
+import random
 
 from models import sentiment_analysis
 
+import threading
+import concurrent.futures
 
-def take_news_by_tag(list_news, tag):
+thread_local = threading.local()
+
+
+def take_news_by_tag(list_news: list, tag: str) -> list:
+    ''' Take news by tag.
+    '''
     res = []
 
     for news in list_news:
         if news['tag'] == tag:
             res.append(news)
-    
+
     return res
 
+def get_empty_item() -> dict:
+    ''' Get an empty item.
+    '''
+    item = {
+        'site': None,
+        'title_news': None,
+        'url_news': None,
+        'tag': None,
+        'img_src': None,
+        'raia': None,
+        'url_site': None
+    }
 
-def get_empty_item():
-    item = {'site': None, 'title_news': None, 'url_news': None, 
-            'tag': None, 'img_src': None, 'espectro': None,
-            'img_src': None, 'url_site': None}
-    
     return item
 
+def get_random_n(
+    min_n: int, 
+    max_n: int
+    ) -> int:
+    '''Get a random int n.
+    '''
+    return int(random.randint(min_n, max_n))
 
-## continuar
-class Scrapy():
-    def __init__(self, 
-                 verbose: bool, 
-                 site: str, 
-                 tag: str,
-                 n_max: int,
-                 espectro: str,
-                 img_src: str,
-                 url_site: str):
-        
-        self.verbose = verbose, 
-        self.site = site,
-        self.tag = tag
-        self.n_max = n_max,
-        self.espectro = espectro
-        self.img_src = img_src
-        self.url_site = (url_site)
-        # print([i for i in self.__dict__.items()])
-        # print(f'n_max: {n_max} - self.n_max: {self.n_max[0]}')
-        
-    def __add_sentiment_item(self, item: dict, title_news: str):
-        news_sentiment = sentiment_analysis.sentence_analysis(title_news)            
-        item = {**item, **news_sentiment}
-        return item
-    
-    def __get_item(self, title_news: str, url_news: str):
-        return {'site': self.site[0], 'title_news': title_news, 
-                'url_news': url_news, 'tag': self.tag, 
-                'img_src': self.img_src, 'espectro': self.espectro} 
-    
-    # scrapy
-    def __scrapy_agencia_basil(self, soup):
-        k = 0
-        res = []
-        
-        for a in soup.find('div', class_='linha-noticia rowflex').find_all('a'):
-            url_news = self.url_site + a['href']
-            url_news = url_news.strip()
-            if '-' not in url_news:
-                url_news = self.url_site
-            
-            title_news = a.get_text().split('\n')[2].strip()
-            
-            item = self.__get_item(title_news, url_news)
-            
-            item = self.__add_sentiment_item(item, title_news)
-            
-            res.append(item)
-            
-            k += 1
-            if k == self.n_max[0]:
-                break
-        
-        return res
-    
-    def __scrapy_bdf(self, soup):
-        k = 0
-        res = []
-        
-        for a in soup.find('section', class_='most-read spacing').find_all('a'):
-            url_news = self.url_site + a['href'].strip()
-            if '-' not in url_news:
-                url_news = self.url_site
-            
-            title_news = a.get_text().strip()
-            
-            item = self.__get_item(title_news, url_news)
-            
-            item = self.__add_sentiment_item(item, title_news)
-            
-            res.append(item)
-            
-            k += 1
-            if k == self.n_max[0]:
-                break
-        
-        return res
-    
-    def __scrapy_icl_noticias(self, soup):
-        k = 0
-        res = []
-        
-        for row in soup.find_all('div', class_='c-flex home-dest-block'):      
-            for a in row.find_all('a')[1:]:                
-                url_news = a['href'].strip()
-                title_news = a.find('h2').get_text().strip()
-                
-                if '-' not in url_news:
-                    url_news = self.url_site
-                    
-                item = self.__get_item(title_news, url_news)
+def add_sentiment_item(item: dict, title_news: str):
+    '''Add sentiment item with ml.
+    '''
+    print(f'\n[add_sentiment_item] title_news: {title_news}')
+    news_sentiment = sentiment_analysis.sentence_analysis(title_news)
+    res = {**item, **news_sentiment}
+    return res
 
-                item = self.__add_sentiment_item(item, title_news)
+def get_item(param, title_news: str, url_news: str) -> dict:
+    '''Get item.
+    '''
+    # print(f'\n[get_item] title_news: {title_news}')
+    # print(f'\n[get_item] param.keys(): {param.keys()}')
+    return {'site': param['site'], 
+            'title_news': title_news, 
+            'url_news': url_news, 
+            'tag': param['tag'], 
+            'img_src': param['img_src'], 
+            'raia': param['raia'],
+            'n_max': param['n_max']} 
 
-                res.append(item)
+# scrapy
+def scrapy_agencia_brasil(param, soup):
+    '''Scrapy Agência Brasil
+    '''
+    k = 0
+    res = []
+    # print(f"[scrapy_agencia_brasil] param['url_site']: {param['url_site']}")
+    for a in soup.find('div', class_='linha-noticia rowflex').find_all('a'):
+        url_news = param['url_site'] + a['href']
+        url_news = url_news.strip()
+        if '-' not in url_news:
+            url_news = param['url_site']
 
-                k += 1
-                if k == self.n_max[0]:
-                    break
-            if k == self.n_max[0]:
-                break
-        return res
+        title_news = a.get_text().split('\n')[2].strip()
+        # print(f"[scrapy_agencia_brasil] title_news: {title_news}")
+        # print(f"[scrapy_agencia_brasil] url_news: {url_news}")
+        # print(f"[scrapy_agencia_brasil] param['n_max']: {param['n_max']}")
+        item = get_item(param=param, title_news=title_news, url_news=url_news)
 
-    def __scrapy_olhar_digital(self, soup):
-            k = 0
-            res = []
-            
-            for row in soup.find_all('div', class_='post-list margin-wrapper-lg columns2'):
-                for a in row.find_all('a'):
-                    title_news = a.find('h2').get_text().strip()
-                    url_news = a['href'].strip()
-                    
-                    if '-' not in url_news:
-                        url_news = self.url_site
-                        
-                    item = self.__get_item(title_news, url_news)
+        item = add_sentiment_item(item=item, title_news=title_news)
 
-                    item = self.__add_sentiment_item(item, title_news)
+        res.append(item)
 
-                    res.append(item)
+        k += 1
+        if k == param['n_max']:
+            break
+    # print(f'[scrapy_agencia_brasil] res: {res}')
+    return res
 
-                    k += 1
-                    if k == self.n_max[0]:
-                        break
-                if k == self.n_max[0]:
-                    break
-            
-            return res
-        
-    def __scrapy_poder360(self, soup):
-        k = 0
-        res = []
-        
-        for a in soup.find('ol', class_='box-ordered-list__list').find_all('a'):
+def scrapy_bdf(param: dict, soup: BeautifulSoup)-> list:
+    '''Scrapy BDF (Brasil de Fato) site.
+    '''
+    k = 0
+
+    res = []
+    for a in soup.find('section', class_='most-read spacing').find_all('a'):
+        url_news = param['url_site'] + a['href'].strip()
+        if '-' not in url_news:
+            url_news = param['url_site']
+
+        title_news = a.get_text().strip()
+
+        item = get_item(param=param, title_news=title_news, url_news=url_news)
+
+        item = add_sentiment_item(item=item, title_news=title_news)
+
+        res.append(item)
+
+        k += 1
+        if k == param['n_max']:
+            break
+
+    return res
+
+def scrapy_carta_capital(param, soup):
+    '''Scrapy BDF (Brasil de Fato) site.
+    '''
+    k = 0
+    res = []
+    for row in soup.find_all('div', class_='h-news__list'):
+        for a in row.find_all('a', class_='h-news__item'):
             url_news = a['href'].strip()
-            title_news = a.get_text().strip()
+            title_news = a['title'].strip()
             
             if '-' not in url_news:
-                url_news = self.url_site
+                url_news = param['url_site']
                 
-            item = self.__get_item(title_news, url_news)
+            item = get_item(param=param, title_news=title_news, url_news=url_news)
 
-            item = self.__add_sentiment_item(item, title_news)
+            item = add_sentiment_item(item=item, title_news=title_news)
 
             res.append(item)
 
             k += 1
-            if k == self.n_max[0]:
+            if k == param['n_max']:
                 break
-      
-        return res
+        if k == param['n_max']:
+            break
     
-    def __scrapy_carta_capital(self, soup):
-        k = 0
-        res = []
-        
-        for row in soup.find_all('div', class_='h-news__list'):
-            for a in row.find_all('a', href=True):
-                url_news = a['href'].strip()
-                title_news = soup.find('div', class_='h-news__list').find('a', href=True).get('title').strip()
-                
-                if '-' not in url_news:
-                    url_news = self.url_site
-                    
-                item = self.__get_item(title_news, url_news)
-
-                item = self.__add_sentiment_item(item, title_news)
-
-                res.append(item)
-
-                k += 1
-                if k == self.n_max[0]:
-                    break
-            if k == self.n_max[0]:
-                break
-        
-        return res
-    
-    def __scrapy_uol(self, soup):
-        k = 0
-        res = []
-        
-        for row in soup.find_all('li', class_='mostRead__item'):
-            title_news = row.get_text().strip()
-            for a in row.find_all('a', href=True):
-                url_news = a['href'].strip()
-                
-                if '-' not in url_news:
-                    url_news = self.url_site
-                    
-                item = self.__get_item(title_news, url_news)
-
-                item = self.__add_sentiment_item(item, title_news)
-
-                res.append(item)
-
-                k += 1
-                if k == self.n_max[0]:
-                    break
-            if k == self.n_max[0]:
-                break
-        
-        return res
-    
-    def __scrapy_g1(self, soup):
-        k = 0
-        res = []
-        
-        for row in soup.find_all('div', class_='feed-post-body-title gui-color-primary gui-color-hover'):
-            title_news = row.find('h2').get_text().strip()
-            url_news = row.find_all('a')[0]['href'].strip()
-            
-            if '-' not in url_news:
-                url_news = self.url_site
-                
-            item = self.__get_item(title_news, url_news)
-
-            item = self.__add_sentiment_item(item, title_news)
-
-            res.append(item)
-
-            k += 1
-            if k == self.n_max[0]:
-                break    
-        
-        return res
-    
-        k = 0
-        res = []
-        
-        for row in soup.find_all('div', class_='feed-post-body-title gui-color-primary gui-color-hover'):
-            title_news = row.find('h2').get_text().strip()
-            url_news = row.find_all('a')[0]['href'].strip()
-            
-            if '-' not in url_news:
-                url_news = self.url_site
-                
-            item = self.__get_item(title_news, url_news)
-
-            item = self.__add_sentiment_item(item, title_news)
-
-            res.append(item)
-
-            k += 1
-            if k == self.n_max[0]:
-                break    
-        
-        return res
-    
-    def __scrapy_canaltech(self, soup):
-        k = 0
-        res = []
-        
-        for row in soup.find_all('a', class_='jc'):
-            title_news = row.find('h3').get_text().strip()
-            url_news = self.url_site + row['href']
-            
-            if '-' not in url_news:
-                url_news = self.url_site
-                
-            item = self.__get_item(title_news, url_news)
-
-            item = self.__add_sentiment_item(item, title_news)
-
-            res.append(item)
-
-            k += 1
-            if k == self.n_max[0]:
-                break    
-        
-        return res
-    
-    def __run_scrapy(self, verbose=False):
-        res = []
-        try:
-            html = requests.get(self.url_site).text
-            soup = BeautifulSoup(html, 'html.parser')
-                 
-            print(f'>> Feito request [{self.site}].')
-            
-            if verbose: print(soup.prettify())
-            
-            if verbose: print(f'>>> self.site[0]: {self.site[0]}')
-            if self.site[0] == 'ICL Notícias':
-                res = self.__scrapy_icl_noticias(soup)
-            elif self.site[0] == 'Agência Brasil':
-                res = self.__scrapy_agencia_basil(soup)
-            elif self.site[0] == 'Brasil de Fato':
-                res = self.__scrapy_bdf(soup)
-            elif self.site[0] == 'Poder 360':
-                res = self.__scrapy_poder360(soup)
-            elif self.site[0] == 'Carta Capital':
-                res = self.__scrapy_carta_capital(soup)
-            elif self.site[0] == 'UOL':
-                res = self.__scrapy_uol(soup)
-            elif self.site[0] == 'G1-Mundo':
-                res = self.__scrapy_g1(soup)
-            elif self.site[0] == 'Canaltech':
-                res = self.__scrapy_canaltech(soup)
-            elif self.site[0] == 'Olhar Digital':
-                res = self.__scrapy_olhar_digital(soup)            
-                
-            print(f'>> Feito scrapy {self.site[0]}.')
-               
-        except Exception as e:
-            print('>> Erro ao fazer request.')
-            print(f'>> {e}')
-            item = get_empty_item()
-            res.append(item)
-        print(f'>>> # Notícias: {len(res)}')
-        return res
-    
-    
-    def run_scrapy(self):
-        return self.__run_scrapy()
-
-## continuar
-def icl_noticias_scrapy():
-    res = Scrapy(verbose=False, 
-                 site='ICL Notícias',
-                 tag='Gerais', 
-                 n_max=2,
-                 espectro='left',
-                 img_src='images/icl_logo.png',
-                 url_site='https://iclnoticias.com.br/',
-          ).run_scrapy()
-    return res  
-     
-def agencia_basil_scrapy():
-    res = Scrapy(verbose=False, 
-                 site='Agência Brasil',
-                 tag='Gerais', 
-                 n_max=2,
-                 espectro='center',
-                 img_src='images/agencia_brasil_logo.png',
-                 url_site='https://agenciabrasil.ebc.com.br/',
-          ).run_scrapy()
-    return res  
-
-def bdf_scrapy():
-    res = Scrapy(verbose=False, 
-                 site='Brasil de Fato',
-                 tag='Gerais', 
-                 n_max=2,
-                 espectro='left',
-                 img_src='images/bdf_logo.png',
-                 url_site='https://www.brasildefato.com.br/',
-          ).run_scrapy()
-    return res  
-
-def carta_capital_scrapy():
-    res = Scrapy(verbose=False, 
-                 site='Carta Capital',
-                 tag='Gerais', 
-                 n_max=2,
-                 espectro='left',
-                 img_src='images/carta_capital_logo.png',
-                 url_site='https://www.cartacapital.com.br/',
-          ).run_scrapy()
     return res
 
-def olhar_digital_scrapy():
-    res = Scrapy(verbose=False, 
-                 site='Olhar Digital',
-                 tag='Tecnologia', 
-                 n_max=2,
-                 espectro='center',
-                 img_src='images/olhar_digital_logo.png',
-                 url_site='https://olhardigital.com.br/editorias/noticias/',
-          ).run_scrapy()
-    return res  
+def scrapy_icl_noticias(param, soup):
+    '''Scrapy ICL Notícias.
+    '''
+    k = 0
+    res = []
 
-def poder360_scrapy():
-    res = Scrapy(verbose=False, 
-                 site='Poder 360',
-                 tag='Gerais', 
-                 n_max=2,
-                 espectro='center',
-                 img_src='images/poder_360_logo.png',
-                 url_site='https://www.poder360.com.br/',
-          ).run_scrapy()
-    return res  
+    for row in soup.find_all('div', class_='c-flex home-dest-block'):      
+        for a in row.find_all('a')[1:]:                
+            url_news = a['href'].strip()
+            title_news = a.find('h2').get_text().strip()
 
-def uol_scrapy():
-    res = Scrapy(verbose=False, 
-                 site='UOL',
-                 tag='Gerais', 
-                 n_max=2,
-                 espectro='right',
-                 img_src='images/uol_logo.png',
-                 url_site='https://www.uol.com.br/',
-          ).run_scrapy()
-    return res 
+            if '-' not in url_news:
+                url_news = param['url_site']
 
-def g1_mundo_scrapy():
-    res = Scrapy(verbose=False, 
-                 site='G1-Mundo',
-                 tag='Gerais', 
-                 n_max=2,
-                 espectro='right',
-                 img_src='images/g1_logo.png',
-                 url_site='https://g1.globo.com/mundo',
-          ).run_scrapy()
-    return res 
+            item = get_item(param=param, title_news=title_news, url_news=url_news)
 
-def canaltech_scrapy():
-    res = Scrapy(verbose=False, 
-                 site='Canaltech',
-                 tag='Tecnologia', 
-                 n_max=2,
-                 espectro='right',
-                 img_src='images/canaltech_logo.png',
-                 url_site='https://canaltech.com.br/mais-lidas',
-          ).run_scrapy()
+            item = add_sentiment_item(item=item, title_news=title_news)
+
+            res.append(item)
+
+            k += 1
+            if k == param['n_max']:
+                break
+        if k == param['n_max']:
+            break
     return res
 
-def scrapy_each_site():
+
+def scrapy_g1(param, soup):
+    ''' Scrapy G1.
+    '''
+    k = 0
+    res = []
+    
+    for row in soup.find_all('div', class_='feed-post-body-title gui-color-primary gui-color-hover'):
+        title_news = row.find('h2').get_text().strip()
+        url_news = row.find_all('a')[0]['href'].strip()
+        
+        if '-' not in url_news:
+            url_news = param['url_site']
+            
+        item = get_item(param=param, title_news=title_news, url_news=url_news)
+
+        item = add_sentiment_item(item=item, title_news=title_news)
+
+        res.append(item)
+
+        k += 1
+        if k == param['n_max']:
+            break
+
+    return res
+
+def scrapy_g1_tech(param, soup):
+    '''Scrapy G1 Tech.
+    '''
+    k = 0
+    res = []
+
+    for row in soup.find('div', class_='_evt').find_all('a'):
+        title_news = row.get_text().replace('\n', '').strip()
+        url_news = row['href'].strip()
+        if len(title_news) > 0:
+            if '-' not in url_news:
+                url_news = param['url_site']
+
+            item = get_item(param=param, title_news=title_news, url_news=url_news)
+
+            item = add_sentiment_item(item=item, title_news=title_news)
+
+            res.append(item)
+
+            k += 1
+
+        if k == param['n_max']:
+            break
+
+    return res
+
+
+def scrapy_olhar_digital(param, soup):
+    ''' Scrapy Olhar Digital.
+    '''
+    k = 0
+    res = []
+
+    for row in soup.find_all('div', class_='post-list margin-wrapper-lg columns2'):
+        for a in row.find_all('a'):
+            title_news = a.find('h2').get_text().strip()
+            url_news = a['href'].strip()
+
+            if '-' not in url_news:
+                url_news = param['url_site']
+
+            item = get_item(param=param, title_news=title_news, url_news=url_news)
+
+            item = add_sentiment_item(item=item, title_news=title_news)
+
+            res.append(item)
+
+            k += 1
+            if k == param['n_max']:
+                break
+        if k == param['n_max']:
+            break
+
+    return res
+
+
+def scrapy_poder360(param, soup):
+    '''Scrapy Poder 360.
+    '''
+    k = 0
+    res = []
+
+    for a in soup.find('ol', class_='box-ordered-list__list').find_all('a'):
+        url_news = a['href'].strip()
+        title_news = a.get_text().strip()
+
+        if '-' not in url_news:
+            url_news = param['url_site']
+
+        item = get_item(param=param, title_news=title_news, url_news=url_news)
+
+        item = add_sentiment_item(item=item, title_news=title_news)
+
+        res.append(item)
+
+        k += 1
+        if k == param['n_max']:
+            break
+
+    return res
+
+
+def scrapy_uol(param, soup):
+    '''Scrapy UOL.
+    '''
+    k = 0
+    res = []
+
+    for row in soup.find_all('li', class_='mostRead__item'):
+        title_news = row.get_text().strip()
+        for a in row.find_all('a', href=True):
+            url_news = a['href'].strip()
+
+            if '-' not in url_news:
+                url_news = param['url_site']
+
+            item = get_item(param=param, title_news=title_news, url_news=url_news)
+
+            item = add_sentiment_item(item=item, title_news=title_news)
+
+            res.append(item)
+
+            k += 1
+            if k == param['n_max']:
+                break
+        if k == param['n_max']:
+            break
+    
+    return res
+
+def scrapy_canaltech(param, soup):
+    '''Scrapy Canaltech.
+    '''
+    k = 0
+    res = []
+
+    for row in soup.find_all('a', class_='jc'):
+        title_news = row.find('h3').get_text().strip()
+        url_news = param['url_site'] + row['href']
+
+        if '-' not in url_news:
+            url_news = param['url_site']
+
+        item = get_item(param=param, title_news=title_news, url_news=url_news)
+
+        item = add_sentiment_item(item=item, title_news=title_news)
+
+        res.append(item)
+
+        k += 1
+        if k == param['n_max']:
+            break 
+
+    return res
+
+def run_scrapy(params, verbose=False):
+    ''' Run scrapy.
+    '''
+    # print(f'[run_scrapy] params.keys(): {params.keys()}')
+    res = []
+    try:
+        html = params['response_text']#await response.text() # ok ?
+        # print(f"[run_scrapy] >>> Read {html[:5]} bytes from {params['url_site']}")
+        soup = BeautifulSoup(html, 'html.parser')  # ok ?
+
+        print(f"\n[run_scrapy] Feito request [{params['site']}].")
+
+        if params['site'] == 'ICL Notícias':
+            res = scrapy_icl_noticias(params, soup)
+        elif params['site'] == 'Agência Brasil':
+            res = scrapy_agencia_brasil(params, soup)
+        elif params['site'] == 'Brasil de Fato':
+            res = scrapy_bdf(params, soup)
+        elif params['site'] == 'Poder 360':
+            res = scrapy_poder360(params, soup)
+        elif params['site'] == 'Carta Capital':
+            res = scrapy_carta_capital(params, soup)
+        elif params['site'] == 'UOL':
+            res = scrapy_uol(params, soup)
+        elif params['site'] == 'G1-Mundo':
+            res = scrapy_g1(params, soup)
+        elif params['site'] == 'Canaltech':
+            res = scrapy_canaltech(params, soup)
+        elif params['site'] == 'Olhar Digital':
+            res = scrapy_olhar_digital(params, soup)
+        elif params['site'] == 'G1-Tecnologia':
+            res = scrapy_g1_tech(params, soup)        
+
+        print(f"[run_scrapy] Feito scrapy {params['site']}.")
+
+    except Exception as e:
+        print(f'[run_scrapy] Erro ao fazer request.\n{e}')
+        item = get_empty_item()
+        res.append(item)
+    print(f'[run_scrapy] # Notícias: {len(res)}')
+    # print(f'[run_scrapy] res: {res}')
+    return res
+
+
+# parâmetros para scrapy
+params = []
+
+params_agencia_brasil = {
+    'verbose': False, 
+    'site': 'Agência Brasil',
+    'tag': 'Gerais', 
+    'n_max': get_random_n(2, 3),
+    'raia': 'center',
+    'img_src': 'images/agencia_brasil_logo.png',
+    'url_site': 'https://agenciabrasil.ebc.com.br/'
+    }
+
+params_bdf_scrapy = {
+    'verbose': False, 
+    'site': 'Brasil de Fato',
+    'tag': 'Gerais', 
+    'n_max': get_random_n(1, 2),
+    'raia': 'left',
+    'img_src': 'images/bdf_logo.png',
+    'url_site': 'https://www.brasildefato.com.br/',
+    }
+
+params_canaltech = {
+    'verbose': False, 
+    'site': 'Canaltech',
+    'tag': 'Tecnologia', 
+    'n_max': get_random_n(1, 3),
+    'raia': 'right',
+    'img_src': 'images/canaltech_logo.png',
+    'url_site': 'https://canaltech.com.br/mais-lidas',
+    }
+
+params_carta_capital = {
+    'verbose': False,
+    'site':'Carta Capital',
+    'tag':'Gerais', 
+    'n_max':get_random_n(2, 3),
+    'raia':'left',
+    'img_src':'images/carta_capital_logo.png',
+    'url_site':'https://www.cartacapital.com.br/'
+    }
+
+params_g1_mundo = {
+    'verbose': False, 
+    'site': 'G1-Mundo',
+    'tag': 'Gerais', 
+    'n_max': get_random_n(1, 2),
+    'raia': 'right',
+    'img_src': 'images/g1_logo.png',
+    'url_site': 'https://g1.globo.com/mundo',
+    }
+
+params_g1_tech = {
+    'verbose': False, 
+    'site': 'G1-Tecnologia',
+    'tag': 'Tecnologia', 
+    'n_max': get_random_n(2, 3),
+    'raia': 'left',
+    'img_src': 'images/g1_logo.png',
+    'url_site': 'https://g1.globo.com/tecnologia', 
+    }
+
+params_icl_noticias = {
+    'verbose': False, 
+    'site': 'ICL Notícias',
+    'tag': 'Gerais',
+    'n_max': get_random_n(1, 2),
+    'raia': 'left',
+    'img_src': 'images/icl_logo.png',
+    'url_site': 'https://iclnoticias.com.br/'
+    }
+
+params_olhar_digital = {
+    'verbose': False, 
+    'site': 'Olhar Digital',
+    'tag': 'Tecnologia', 
+    'n_max': get_random_n(1, 3),
+    'raia': 'center',
+    'img_src': 'images/olhar_digital_logo.png',
+    'url_site': 'https://olhardigital.com.br/editorias/noticias/',
+    }
+
+params_poder360 = {
+    'verbose': False, 
+    'site': 'Poder 360',
+    'tag': 'Gerais', 
+    'n_max': get_random_n(1, 2),
+    'raia': 'center',
+    'img_src': 'images/poder_360_logo.png',
+    'url_site': 'https://www.poder360.com.br/',
+    }
+
+params_uol_scrapy = {
+    'verbose': False, 
+    'site': 'UOL',
+    'tag': 'Gerais', 
+    'n_max': get_random_n(1, 2),
+    'raia': 'right',
+    'img_src': 'images/uol_logo.png',
+    'url_site': 'https://www.uol.com.br/',
+    }
+
+
+params.append(params_agencia_brasil)
+params.append(params_bdf_scrapy)
+params.append(params_canaltech)
+params.append(params_carta_capital)
+params.append(params_g1_mundo)
+params.append(params_g1_tech)
+params.append(params_icl_noticias)
+params.append(params_olhar_digital)
+params.append(params_poder360)
+params.append(params_uol_scrapy)
+
+# print('\n[checks]')
+# print(f'>>> params: {params}')
+
+def add_downloaded_site(_param):
+    '''Add downloaded site.
+    '''
+    param = _param
+    # print(f'\n[add_downloaded_site] {param}')
+    param['response_text'] = requests.get(param['url_site'], timeout=9).text
+    print(f"\n[add_downloaded_site] param['site']: {param['site']}")
+    res = run_scrapy(param)
+    # print(f'[add_downloaded_site] res: {res}')
+    return res
+
+res_scrapy = []
+def scrapy_all_sites():
+    ''' Run scrapy for each site.
+    '''
+    print('\n[scrapy_all_sites]')
     t0 = time.time()
-    print('\n>>> Carta Capital')
-    try:    
-        news_carta_capital = carta_capital_scrapy()
-        print('>>> Carta Capital: done.')
-    except:
-        print('>>> Carta Capital: error.')
-    
-    jornal = 'ICL Notícias'
-    print(f'\n>>> {jornal}')
-    try:    
-        news_icl = icl_noticias_scrapy()
-        print(f'>>> {jornal}: done.')
-    except:
-        print(f'>>> {jornal}: error.')
-    
-    print('\n>>> Brasil de Fato')
-    try:
-        news_bdf = bdf_scrapy()
-        print('>>> Brasil de Fato: done.')
-    except:
-        print('>>> Brasil de Fato: error.')
-    print('\n>>> Agência Brasil')
-    try:
-        news_agencia_brasil = agencia_basil_scrapy()
-        print('>>> Agência Brasil: done.')
-    except:
-        print('>>> Agência Brasil: error.')
-        
-    print('\n>>> Olhar Digital')
-    try:
-        news_olhar_digital = olhar_digital_scrapy()
-        print('>>> Olhar Digital: done.')
-    except:
-        print('>>> Olhar Digital: error.')
-    
-    print('\n>>> Poder 360')
-    try:
-        news_poder360 = poder360_scrapy()
-        print('>>> Poder 360: done.')
-    except:
-        print('>>> Poder 360: error.')
-    
-    print('\n>>> UOL ...')
-    try:
-        news_uol = uol_scrapy()
-        print('>>> UOL: done.')
-    except:
-        print('>>> UOL: error.')
-    
-    print('\n>>> G1 ...')
-    try:
-        news_g1 = g1_mundo_scrapy()
-        print('>>> G1: done.')
-    except:
-        print('>>> G1: error.')
-    
-    print('\n>>> Canaltech ...')
-    try:
-        news_canaltech = canaltech_scrapy()
-        print('>>> CanalTech: done.')
-    except:
-        print('>>> CanalTech: error.')
-    
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        global res_scrapy
+        res_scrapy = []
+        print(f'[scrapy_all_sites][ThreadPoolExecutor]')
+        # print(f'params: {params}')
+        res_scrapy = list(executor.map(add_downloaded_site, params))
+        executor.shutdown(wait=True)
+        # print(f' [ThreadPoolExecutor] res_scrapy: {res_scrapy}')
+
+        print(' [ThreadPoolExecutor] Loop executado.')
+        print('\n', 30*'-')
+
     tempo_gasto = round(time.time() - t0, 2)
-    print(f'\n>>> Tempo gasto: {tempo_gasto:.2f} s')
-    return news_bdf, news_icl, news_agencia_brasil, news_poder360,\
-            news_carta_capital, news_uol, news_g1, news_canaltech, news_olhar_digital,\
-            tempo_gasto
+    print(f'\n\n[scrapy_all_sites] Tempo gasto: {tempo_gasto:.2f} s\n\n')
+    print('\n', 30*'-')
+    return res_scrapy, tempo_gasto
+
+
+def run_all_scrapy():
+    ''' Run all scrapies.
+    '''
+    res_scrapy, tempo_gasto = scrapy_all_sites()
+    print('\n[run_all_scrapy ...]\n')
+    # print(f'[run_all_scrapy] res_scrapy[0]:\n{res_scrapy[0]}')
+    return res_scrapy, tempo_gasto
+    

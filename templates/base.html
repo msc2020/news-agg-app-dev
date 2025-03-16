@@ -1,12 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<head>    
     <meta charset="UTF-8">
+    <!--<link href="https://cdn.bokeh.org/bokeh/release/bokeh-3.4.3.min.js" rel="stylesheet">-->
+    <!--<script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.3.min.js"></script>
+    <script type="text/javascript">
+        Bokeh.set_log_level("info");
+    </script>
+    -->
+    <script src="https://cdn.bokeh.org/bokeh/release/bokeh-3.4.3.min.js"></script>
+    <script src='https://cdn.bokeh.org/bokeh/release/bokeh-widgets-3.4.3.min.js'></script>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    
     <link href='http://fonts.googleapis.com/css?family=Oswald:400,300,700' rel='stylesheet' type='text/css'>
-    
+
     <style>
       body {
         font-family: 'Work-Sans', sans-serif;
@@ -14,12 +21,12 @@
       }
       /* Customize navbar */
         .nav-pills .nav-link:not(.active) {
-            background-color: #d1e7df;
-            color: rgb(33, 33, 33);
+          background-color: #d1e7df;
+          color: rgb(33, 33, 33);
         }
         .nav-pills .nav-link.active, .nav-pills .show > .nav-link {          
           background-color: #89a7a7;
-            color: rgb(255, 255, 255);
+          color: rgb(255, 255, 255);
         }
         .nav-pills .nav-link {
           border-radius: 0.7rem;
@@ -63,9 +70,38 @@
         .card-bolder{
           font-weight: bolder;
         }
-  </style>
+        .circle-wrap .inside-circle {
+          width: 122px;
+          height: 122px;
+          border-radius: 50%;
+          background: #d2eaf1;
+          line-height: 120px;
+          text-align: center;
+          margin-top: 14px;
+          margin-left: 14px;
+          color: #1e51dc;
+          position: absolute;
+          z-index: 100;
+          font-weight: 700;
+          font-size: 2em;
+        }
+
+        table.dataframe, .dataframe th, .dataframe td{
+          position: relative;
+          border: 0.5px;
+          border-bottom: 1.5px solid;
+          
+          text-align: center;
+          padding: 10px;
+          margin-bottom: 30px;
+          margin-left: 2px;
+          margin-right: 2px;
+          font-size: 0.9em;          
+          color: black;
+          background-color: #d1e7df;
+        }      
+    </style>
     
-</head>
     <title>Agregador de Notícias |{% block title %}{% endblock %} - Beta</title>   
 </head>
 
@@ -78,7 +114,7 @@
           {% else %}
             class="nav-link a-spaces"
           {% endif %}
-        href="/" >Todas
+        href="{{ url_for('all_news') }}">Todas
       </a>
     </li>
     <li class="nav-item">
@@ -100,31 +136,60 @@
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link disabled a-disable a-spaces" href="#">Sobre</a>
+      <a {% if request.path == '/visual' %}
+            class="nav-link active a-spaces"
+          {% else %}
+            class="nav-link a-spaces"
+          {% endif %}
+        href="{{ url_for('visual') }}">Visual
+      </a>
     </li>
+    <li class="nav-item">
+      <a {% if request.path == '/overview' %}
+            class="nav-link active a-spaces"
+          {% else %}
+            class="nav-link a-spaces"
+          {% endif %}
+        href="{{ url_for('overview') }}">Overview
+      </a>
+    </li>   
+    <!--<li class="nav-item">
+      <a class="nav-link a-spaces" href="{{ url_for('overview') }}">Overview</a>
+    </li>
+  -->
   </ul>  
 </div>
 
 <div class="container">
-    <div class="card">
-      <div class="card-body">
-        <h5 class="card-title card-bolder" style="color:white;align:center">{{ date.strftime('%d/%m/%Y · %Hh:%Mhmin') }}</h5>
-        <div class="row row-cols-4">
-          <div class="col-md-4">{% block news_left %}{% endblock %}</div>
-          <div class="col-md-4">{% block news_center %}{% endblock %}</div>
-          <div class="col-md-4">{% block news_right %}{% endblock %}</div>
-        </div>
-      </div> 
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title card-bolder" style="color:white;align:center">{{date.strftime('%d/%m/%Y · %Hh:%Mmin') }}</h5>
+      <div class="row row-cols-4">
+        <div class="col-md-4">{% block news_left %}{% endblock %}</div>
+        <div class="col-md-4">{% block news_center %}{% endblock %}</div>
+        <div class="col-md-4">{% block news_right %}{% endblock %}</div>
+      </div>
     </div>
-  <div class="text-info text-center">
-    <p class="card-text">
-      <small class="text-muted"> 
-        Total de Notícias Coletadas: {{list_news | length}}  ({{ tempo_gasto }} s)
-      </small>
-    </p>
-    <br />
-  </div>  
+    <div class="row justify-content-center">
+          {% block content %}{% endblock %}
+    </div>
+  </div>
 </div>
+  
+  
+<div class="text-info text-center">
+  <p class="card-text">
+    <small class="text-muted"> 
+      {% if (list_news is defined) and (tempo_gasto is defined) %}
+        Total de Notícias Coletadas: {{list_news | length}}  ({{ tempo_gasto }} s)
+      {% endif %}
+    </small>
+  </p>
+  <br />
+</div>
+
+
+
 
 <!-- <div style="text-align: center;">
     <div>
@@ -133,6 +198,43 @@
     </div>
     <br>
 </div>  -->
+
+<script src="https://cdn.bokeh.org/bokeh/release/bokeh-3.4.3.min.js"></script>
+<script src='https://cdn.bokeh.org/bokeh/release/bokeh-widgets-3.4.3.min.js'></script>
+
+<script type="text/javascript">
+  //https://stackoverflow.com/questions/15547198/export-html-table-to-csv-using-vanilla-javascript
+  // Quick and simple export target #table_id into a csv
+  function download_table_as_csv(table_id, separator = ',') {
+    // Select rows from table_id
+    var rows = document.querySelectorAll('table#' + table_id + ' tr');
+    // Construct csv
+    var csv = [];
+    for (var i = 0; i < rows.length; i++) {
+        var row = [], cols = rows[i].querySelectorAll('td, th');
+        for (var j = 0; j < cols.length; j++) {
+            // Clean innertext to remove multiple spaces and jumpline (break csv)
+            var data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, '').replace(/(\s\s)/gm, ' ')
+            // Escape double-quote with double-double-quote (see https://stackoverflow.com/questions/17808511/properly-escape-a-double-quote-in-csv)
+            data = data.replace(/"/g, '""');
+            // Push escaped string
+            row.push('"' + data + '"');
+        }
+        csv.push(row.join(separator));
+    }
+    var csv_string = csv.join('\n');
+    // Download it
+    var filename = table_id + '_' + new Date().toLocaleDateString() + '.csv';
+    var link = document.createElement('a');
+    link.style.display = 'none';
+    link.setAttribute('target', '_blank');
+    link.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv_string));
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+</script>
 
 </body>
 </html>

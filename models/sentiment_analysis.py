@@ -7,8 +7,8 @@ from deep_translator import GoogleTranslator
 # language translate
 def language_translate(sentence, lang):
     try:
-        translator = GoogleTranslator(source='auto', target=lang)
-        translated = translator.translate(str(sentence))        
+        translator = GoogleTranslator(source='pt', target=lang)
+        translated = translator.translate(text=str(sentence))
     except:
         translated = 'Error'
     
@@ -32,9 +32,14 @@ def check_sentiment(score):
         sentiment = 'positivo'
     elif score < -0.5:
         sentiment = 'negativo'
-    print(f'>> check_sentiment(): {(score, sentiment)}') 
+    print(f'  [check_sentiment] (score, sentiment): {(score, sentiment)} - ({map_to_0_100(score, -1, 1)}%)') 
+    
     return sentiment
 
+def map_to_0_100(v, x, y):
+    # [a, b] -> [c, d]=[0, 100]
+    # f(t) = c + (d-c)/(b-a)*(t-a)
+    return int(round((v-x)/(y-x)*100, 2))
 
 # sentence analysis
 def sentence_analysis(sentence):
@@ -46,12 +51,14 @@ def sentence_analysis(sentence):
     score_tb = round(TextBlob(sentence_en).sentiment.polarity, 4)    
     sentiment_tb = check_sentiment(score_tb)
     score_subjectivity = round(TextBlob(sentence_en).sentiment.subjectivity, 4)
-    subjectivity_tb = check_subjectivity(score_subjectivity)    
-
+    subjectivity_tb = check_subjectivity(score_subjectivity)
     res = {
-        'score_tb': score_tb, 'score_subjectivity': score_subjectivity,
-        'sentiment_tb': sentiment_tb, 'subjectivity_tb': subjectivity_tb        
+        'score_tb': map_to_0_100(v=score_tb, x=-1, y=1),
+        'score_subjectivity': map_to_0_100(v=score_subjectivity, x=0, y=1),
+        'sentiment_tb': sentiment_tb,
+        'subjectivity_tb': subjectivity_tb
     }
+    
     return res
 #
 ## end: sentiment analysis ##

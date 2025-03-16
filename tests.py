@@ -8,7 +8,7 @@ tests_news = [
     'sentiment_tb': 'positivo',
     'score_subjectivity': 0.1,
     'subjectivity_tb': 'neutro',
-    'espectro': 'left'
+    'raia': 'left'
     },
     {'site': 'ICL Notícias',
     'title_news': 'Título Notícia ICL data',
@@ -19,7 +19,7 @@ tests_news = [
     'sentiment_tb': 'positivo',
     'score_subjectivity': 0.7,
     'subjectivity_tb': 'objetivo',
-    'espectro': 'left'
+    'raia': 'left'
     },
     {'site': 'Poder 360',
     'title_news': 'Título Notícia Poder 360 data',
@@ -30,7 +30,7 @@ tests_news = [
     'sentiment_tb': 'positivo',
     'score_subjectivity': 0.7,
     'subjectivity_tb': 'objetivo',
-    'espectro': 'center'
+    'raia': 'center'
     },
     {'site': 'UOL',
     'title_news': 'Título Notícia Uol data',
@@ -41,18 +41,40 @@ tests_news = [
     'sentiment_tb': 'positivo',
     'score_subjectivity': 0.7,
     'subjectivity_tb': 'objetivo',
-    'espectro': 'right'
+    'raia': 'right'
+    },
+    {'site': 'UOL',
+    'title_news': '2a Título Notícia Uol data',
+    'url_news': 'https://noticias.uol.com.br/cotidiano/ultimas-noticias/2023/02/27/sp-prefeitura-sugere-mudar-lei-para-frear-construcao-de-microapartamentos.htm',
+    'tag': 'Gerais',
+    'img_src': 'images/uol_logo.png',
+    'score_tb': 0.3,
+    'sentiment_tb': 'positivo',
+    'score_subjectivity': 0.7,
+    'subjectivity_tb': 'objetivo',
+    'raia': 'right'
     },
     {'site': 'G1-Mundo',
     'title_news': 'Entenda o que significa o acordo da ONU para proteger a vida marinha em alto-mar',
-    'url_news': 'https://g1.globo.com/mundo/noticia/2023/03/05/entenda-o-que-significa-o-acordo-da-onu-para-proteger-a-vida-marinha-em-alto-mar.ghtml',
+    'url_news': 'd https://g1.globo.com/mundo/noticia/2023/03/05/entenda-o-que-significa-o-acordo-da-onu-para-proteger-a-vida-marinha-em-alto-mar.ghtml',
     'tag': 'Gerais',
     'img_src': 'images/g1_logo.png',
     'score_tb': 0.3,
     'sentiment_tb': 'positivo',
     'score_subjectivity': 0.7,
     'subjectivity_tb': 'objetivo',
-    'espectro': 'right'
+    'raia': 'right'
+    },
+    {'site': 'G1-Mundo',
+    'title_news': '2a Entenda o que significa o acordo da ONU para proteger a vida marinha em alto-mar',
+    'url_news': 'd https://g1.globo.com/mundo/noticia/2023/03/05/entenda-o-que-significa-o-acordo-da-onu-para-proteger-a-vida-marinha-em-alto-mar.ghtml',
+    'tag': 'Gerais',
+    'img_src': 'images/g1_logo.png',
+    'score_tb': 0.3,
+    'sentiment_tb': 'positivo',
+    'score_subjectivity': 0.7,
+    'subjectivity_tb': 'objetivo',
+    'raia': 'right'
     },
     {'site': 'Canaltech',
     'title_news': 'O que era a esfera metálica que apareceu na praia do Japão?',
@@ -63,7 +85,7 @@ tests_news = [
     'sentiment_tb': 'positivo',
     'score_subjectivity': 0.7,
     'subjectivity_tb': 'objetivo',
-    'espectro': 'right'
+    'raia': 'right'
     },
     {'site': 'Olhar digital',
     'title_news': 'A ciência por trás da sinuca [vídeo]',
@@ -74,6 +96,6 @@ tests_news = [
     'sentiment_tb': 'positivo',
     'score_subjectivity': 0.7,
     'subjectivity_tb': 'objetivo',
-    'espectro': 'right'
+    'raia': 'right'
     } 
 ]

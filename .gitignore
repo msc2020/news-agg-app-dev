@@ -1,6 +1,14 @@
 .env
-.space
+*.space
 .venv
 __pycache__
 notebooks
 backups
+backups_db
+databases
+*.ipynb
+instance
+*.csv
+Procfile
+*.json
+docs
